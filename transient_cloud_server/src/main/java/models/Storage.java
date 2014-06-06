@@ -29,4 +29,8 @@ public class Storage {
 	public void delete(String hash) {
 		storage.remove(hash);
 	}
+
+	public FileMetaData search(String hash) {
+		return storage.get(hash);
+	}
 }

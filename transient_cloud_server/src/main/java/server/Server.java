@@ -20,6 +20,15 @@ public class Server {
 	}
 
 	public static void main(String args[]) {
+		initializeRoutes();
+	}
+
+	/**
+	 * Performs major routing duties, calls necessary handlers. Extracted into
+	 * it's own method for extensibility and testing purposes
+	 */
+	public static void initializeRoutes() {
+		get("/status", (request, response) -> "Server is running");
 		get("/find/:name", (request, response) -> getHandler(request));
 		post("/:hash/:name/:timeStamp/:path",
 				(request, response) -> postHandler(request));
@@ -48,6 +57,6 @@ public class Server {
 	}
 
 	public static String getHandler(Request request) {
-		return "Logic to find " + request.params(":name") + " coming soon";
+		return dataStore.search(request.params(":hash")).toString();
 	}
 }

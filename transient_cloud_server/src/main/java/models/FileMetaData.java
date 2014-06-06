@@ -47,4 +47,10 @@ public class FileMetaData extends Server {
 		this.lastModified = lastModified;
 	}
 
+	@Override
+	public String toString() {
+		return this.getName() + "|" + this.getPath() + "|"
+				+ this.getLastModified();
+	}
+
 }
