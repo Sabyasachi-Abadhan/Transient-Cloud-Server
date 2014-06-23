@@ -23,6 +23,12 @@ public class FileMetaData extends Server {
 		this.lastModified = Timestamp.valueOf(lastModified);
 	}
 
+	public FileMetaData(Object name, Object path, Object lastModified) {
+		this.name = (String) name;
+		this.path = (String) path;
+		this.lastModified = Timestamp.valueOf((String) lastModified);
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -52,5 +58,4 @@ public class FileMetaData extends Server {
 		return this.getName() + "|" + this.getPath() + "|"
 				+ this.getLastModified();
 	}
-
 }

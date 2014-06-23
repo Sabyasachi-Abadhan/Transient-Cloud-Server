@@ -6,18 +6,10 @@ import static spark.Spark.post;
 import static spark.Spark.put;
 import models.FileMetaData;
 import models.Storage;
-
-import org.apache.log4j.BasicConfigurator;
-
 import spark.Request;
 
 public class Server {
-	private static Storage dataStore;
-
-	public Server() {
-		dataStore = new Storage();
-		BasicConfigurator.configure();
-	}
+	private static Storage dataStore = new Storage();;
 
 	public static void main(String args[]) {
 		initializeRoutes();
@@ -28,19 +20,24 @@ public class Server {
 	 * it's own method for extensibility and testing purposes
 	 */
 	public static void initializeRoutes() {
+		get("/all", (request, reponse) -> showAll());
 		get("/status", (request, response) -> "Server is running");
 		get("/find/:name", (request, response) -> getHandler(request));
-		post("/:hash/:name/:timeStamp/:path",
-				(request, response) -> postHandler(request));
+		post("/create/", (request, response) -> postHandler(request));
 		put("/:hash/:name/:timeStamp/:path",
 				(request, response) -> putHandler(request));
 		delete("/:hash", (request, response) -> deleteHandler(request));
 	}
 
+	private static String showAll() {
+		return dataStore.print();
+	}
+
 	public static String postHandler(Request request) {
-		FileMetaData newFile = new FileMetaData(request.params(":name"),
-				request.params(":timestamp"), request.params(":path"));
-		dataStore.post(request.params(":hash"), newFile);
+		System.out.println(request.body());
+		// FileMetaData newFile = new FileMetaData(request.params("fileName"),
+		// request.params("fileLastModified"), request.params("filePath"));
+		// dataStore.post(request.params("fileHash"), newFile);
 		return Messages.POST_SUCCESSFUL;
 	}
 
@@ -52,7 +49,7 @@ public class Server {
 	}
 
 	public static String deleteHandler(Request request) {
-		dataStore.delete(request.params(":hash"));
+		dataStore.delete((String) request.attribute("fileHash"));
 		return Messages.DELETE_SUCCESSFUL;
 	}
 

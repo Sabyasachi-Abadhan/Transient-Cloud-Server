@@ -33,4 +33,13 @@ public class Storage {
 	public FileMetaData search(String hash) {
 		return storage.get(hash);
 	}
+
+	public String print() {
+		if (storage.isEmpty())
+			return "No files on server";
+		String all = "";
+		for (FileMetaData file : storage.values())
+			all.concat(file.getName()).concat("\n");
+		return all;
+	}
 }
