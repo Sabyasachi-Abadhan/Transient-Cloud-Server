@@ -16,11 +16,13 @@ public class FileMetaData extends Server {
 	private String name;
 	private String path;
 	private Timestamp lastModified;
+	private Timestamp expirationDate;
 
 	public FileMetaData(String name, String path, String lastModified) {
 		this.name = name;
 		this.path = path;
-		this.lastModified = Timestamp.valueOf(lastModified);
+		// this.lastModified = Timestamp.valueOf(lastModified);
+		this.expirationDate = new Timestamp(new java.util.Date().getTime());
 	}
 
 	public FileMetaData(Object name, Object path, Object lastModified) {
@@ -56,6 +58,14 @@ public class FileMetaData extends Server {
 	@Override
 	public String toString() {
 		return this.getName() + "|" + this.getPath() + "|"
-				+ this.getLastModified();
+				+ this.getLastModified() + "|" + this.getExpirationDate();
+	}
+
+	public Timestamp getExpirationDate() {
+		return expirationDate;
+	}
+
+	public void setExpirationDate(Timestamp expirationDate) {
+		this.expirationDate = expirationDate;
 	}
 }

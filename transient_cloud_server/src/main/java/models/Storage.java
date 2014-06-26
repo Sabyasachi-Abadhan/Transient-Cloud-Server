@@ -37,7 +37,8 @@ public class Storage {
 	public String print() {
 		if (storage.isEmpty())
 			return "No files on server";
-		String all = "";
+		String all = "File List:";
+		all = all.concat("\n");
 		for (FileMetaData file : storage.values())
 			all.concat(file.getName()).concat("\n");
 		return all;

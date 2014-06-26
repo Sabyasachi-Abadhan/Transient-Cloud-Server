@@ -1,6 +1,5 @@
 package server;
 
-import static spark.Spark.delete;
 import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
@@ -23,21 +22,31 @@ public class Server {
 		get("/all", (request, reponse) -> showAll());
 		get("/status", (request, response) -> "Server is running");
 		get("/find/:name", (request, response) -> getHandler(request));
-		post("/create/", (request, response) -> postHandler(request));
+		post("/modify/", (request, response) -> modifyHandler(request));
+		post("/open/", (request, response) -> openHandler(request));
 		put("/:hash/:name/:timeStamp/:path",
 				(request, response) -> putHandler(request));
-		delete("/:hash", (request, response) -> deleteHandler(request));
+		post("/delete/", (request, response) -> deleteHandler(request));
 	}
 
 	private static String showAll() {
 		return dataStore.print();
 	}
 
-	public static String postHandler(Request request) {
-		System.out.println(request.body());
-		// FileMetaData newFile = new FileMetaData(request.params("fileName"),
-		// request.params("fileLastModified"), request.params("filePath"));
-		// dataStore.post(request.params("fileHash"), newFile);
+	public static String openHandler(Request request) {
+		// Store event in db events table
+		return Messages.POST_SUCCESSFUL;
+	}
+
+	public static String modifyHandler(Request request) {
+		System.out.println("Received modify event for "
+				+ request.queryParams(("fileName")));
+		// Replace with db queries for putting into file table and events table
+		FileMetaData newFile = new FileMetaData(
+				request.queryParams("fileName"),
+				request.queryParams("fileLastModified"),
+				request.queryParams("filePath"));
+		dataStore.post(request.params("fileName"), newFile);
 		return Messages.POST_SUCCESSFUL;
 	}
 
@@ -49,7 +58,7 @@ public class Server {
 	}
 
 	public static String deleteHandler(Request request) {
-		dataStore.delete((String) request.attribute("fileHash"));
+		System.out.println("Inside Delete Handler");
 		return Messages.DELETE_SUCCESSFUL;
 	}
 
