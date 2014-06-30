@@ -2,10 +2,10 @@ package server;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.put;
 import models.FileMetaData;
 import models.Storage;
 import spark.Request;
+import database.DatabaseInitialization;
 
 public class Server {
 	private static Storage dataStore = new Storage();;
@@ -24,9 +24,12 @@ public class Server {
 		get("/find/:name", (request, response) -> getHandler(request));
 		post("/modify/", (request, response) -> modifyHandler(request));
 		post("/open/", (request, response) -> openHandler(request));
-		put("/:hash/:name/:timeStamp/:path",
-				(request, response) -> putHandler(request));
+		post("/put/", (request, response) -> putHandler(request));
 		post("/delete/", (request, response) -> deleteHandler(request));
+
+		// Initialize database
+
+		DatabaseInitialization.setupServer();
 	}
 
 	private static String showAll() {
@@ -51,9 +54,7 @@ public class Server {
 	}
 
 	public static String putHandler(Request request) {
-		FileMetaData newFile = new FileMetaData(request.params(":name"),
-				request.params(":timestamp"), request.params(":path"));
-		dataStore.put(request.params(":hash"), newFile);
+		System.out.println("Inside put handler");
 		return Messages.PUT_SUCCESSFUL;
 	}
 
