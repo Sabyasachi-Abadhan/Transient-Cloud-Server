@@ -97,6 +97,16 @@ public class Database {
 		} catch (SQLException e) {
 			System.out.println("Couldn't delete file, sorry");
 		}
+	}
 
+	public void updateFile(String columnName, String oldValue, String newValue) {
+		Connection connection = getConnection();
+		PreparedStatement replaceStatement;
+		try {
+			replaceStatement = connection
+					.prepareStatement("update from files where expiration_date < (?)");
+		} catch (SQLException e) {
+			System.out.println("Couldn't delete file, sorry");
+		}
 	}
 }

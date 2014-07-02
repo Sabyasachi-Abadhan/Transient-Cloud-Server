@@ -6,7 +6,6 @@ import static spark.Spark.post;
 import java.sql.Date;
 import java.sql.SQLException;
 
-import models.FileMetaData;
 import spark.Request;
 import database.Database;
 
@@ -37,7 +36,7 @@ public class Server {
 	 */
 	public void initializeRoutes() {
 		get("/status", (request, response) -> "Server is running");
-		get("/find/:name", (request, response) -> this.getHandler(request));
+		get("/find/", (request, response) -> this.getHandler(request));
 		post("/modify/", (request, response) -> this.modifyHandler(request));
 		post("/open/", (request, response) -> this.openHandler(request));
 		post("/put/", (request, response) -> this.putHandler(request));
@@ -53,7 +52,7 @@ public class Server {
 			db.insertNewEvent("open", request.queryParams("file_name"),
 					request.queryParams("file_path"), new Date(0));
 		} catch (SQLException e) {
-			System.out.println("Couldn't add open event to the database");
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return Messages.POST_SUCCESSFUL;
@@ -61,17 +60,23 @@ public class Server {
 
 	public String modifyHandler(Request request) {
 		System.out.println("Received modify event for "
-				+ request.queryParams(("fileName")));
+				+ request.queryParams(("file_name")));
 		// Replace with db queries for putting into file table and events table
-		FileMetaData newFile = new FileMetaData(
-				request.queryParams("fileName"),
-				request.queryParams("fileLastModified"),
-				request.queryParams("filePath"));
+		try {
+			db.insertNewFile(request.queryParams("name"),
+					request.queryParams("path"),
+					request.queryParams("identifier"), new Date(0));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
 		return Messages.POST_SUCCESSFUL;
 	}
 
 	public String putHandler(Request request) {
 		System.out.println("Inside put handler");
+		db.updateFile("path", request.queryParams("old_path"),
+				request.queryParams("new_path"));
 		return Messages.PUT_SUCCESSFUL;
 	}
 
