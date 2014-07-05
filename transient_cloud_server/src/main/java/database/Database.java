@@ -40,11 +40,11 @@ public class Database {
 		try {
 			connection
 					.prepareStatement(
-							"create table events (name varchar(255), file_name varchar(255), file_path varchar(255), date DATE)")
+							"create table if not exists events (name varchar(255), file_name varchar(255), file_path varchar(255), date DATE)")
 					.execute();
 			connection
 					.prepareStatement(
-							"create table files (name varchar(255), path varchar(255), identifier varchar(255), expiration_date DATE)")
+							"create table if not exists files (name varchar(255), path varchar(255), identifier varchar(255), hash varchar(255), expiration_date DATE)")
 					.execute();
 		} catch (SQLException e) {
 			System.out.println("Failure to execute query, sorry");
@@ -70,15 +70,16 @@ public class Database {
 	}
 
 	public void insertNewFile(String name, String path, String identifier,
-			Date date) throws SQLException {
+			String hash, Date date) throws SQLException {
 		Connection connection = getConnection();
 		PreparedStatement insertStatement = connection
-				.prepareStatement("insert into files (name, path, identifier, expiration_date) values (?,?,?,?)");
+				.prepareStatement("insert into files (name, path, identifier, hash, expiration_date) values (?,?,?,?,?)");
 		insertStatement.setString(1, name);
 		insertStatement.setString(2, path);
 		insertStatement.setString(3, identifier);
+		insertStatement.setString(4, hash);
 		try {
-			insertStatement.setDate(4, date);
+			insertStatement.setDate(5, date);
 			insertStatement.execute();
 		} catch (SQLException e) {
 			System.out.println("Could not insert new file");
@@ -87,6 +88,9 @@ public class Database {
 	}
 
 	public void deleteFile(Date date) {
+		// Select the next expiration_date and then the thread expires,
+		// recalculate for all files that expire and then sleep until the next
+		// expiration date
 		Connection connection = getConnection();
 		PreparedStatement deleteStatement;
 		try {
@@ -103,10 +107,15 @@ public class Database {
 		Connection connection = getConnection();
 		PreparedStatement replaceStatement;
 		try {
-			replaceStatement = connection
-					.prepareStatement("update from files where expiration_date < (?)");
+			replaceStatement = connection.prepareStatement("update files set "
+					+ columnName + " =? where " + columnName + " = ? ");
+			replaceStatement.setString(1, newValue);
+			replaceStatement.setString(2, oldValue);
+			System.out.println(replaceStatement);
+			replaceStatement.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println("Couldn't delete file, sorry");
+			System.out.println("Couldn't update entry, sorry");
+			e.printStackTrace();
 		}
 	}
 }
