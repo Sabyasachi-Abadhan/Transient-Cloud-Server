@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hsqldb.Server;
@@ -87,20 +88,72 @@ public class Database {
 		}
 	}
 
-	public void deleteFile(Date date) {
-		// Select the next expiration_date and then the thread expires,
-		// recalculate for all files that expire and then sleep until the next
-		// expiration date
+	private void deleteFiles(Date date) {
 		Connection connection = getConnection();
 		PreparedStatement deleteStatement;
 		try {
 			deleteStatement = connection
-					.prepareStatement("delete from files where expiration_date < (?)");
+					.prepareStatement("delete from files where expiration_date <= (?)");
 			deleteStatement.setDate(1, date);
 			deleteStatement.execute();
 		} catch (SQLException e) {
-			System.out.println("Couldn't delete file, sorry");
+			System.out.println("Couldn't delete the file, sorry");
 		}
+	}
+
+	public void deleteHandler(Date date) {
+		// Select the next expiration_date and then the thread expires,
+		// recalculate for all files that expire and then sleep until the next
+		// expiration date
+		Connection connection = getConnection();
+		PreparedStatement filesAboutToExpireQuery;
+		try {
+			// First get the files about to expire
+			filesAboutToExpireQuery = connection
+					.prepareStatement("select * from files where expiration_date <= (?)");
+			filesAboutToExpireQuery.setDate(1, date);
+			System.out.println(filesAboutToExpireQuery);
+			ResultSet results = filesAboutToExpireQuery.executeQuery();
+			// Calculate new expiration dates if applicable
+			while (results.next()) {
+				System.out.println("Calling setNewExpirationDate");
+				setNewExpirationDate(results.getString("path"));
+			}
+			// Delete the files which will expire anyway
+			deleteFiles(date);
+		} catch (SQLException e) {
+			System.out.println("Couldn't execute deleteHandler, sorry");
+			e.printStackTrace();
+		}
+	}
+
+	private void setNewExpirationDate(String filePath) {
+		// This kind of filtering doesn't work if the file has been
+		// moved/renamed.
+		// File hash is also not a good solution because file contents will
+		// change
+		String searchTerm = filePath.substring(filePath.lastIndexOf("Dropbox"));
+		Connection connection = getConnection();
+		try {
+			PreparedStatement openEvents = connection
+					.prepareStatement("select * from events where name = 'open' and file_path like ?");
+			openEvents.setString(1, "%" + searchTerm);
+			System.out.println(openEvents);
+			ResultSet results = openEvents.executeQuery();
+			System.out.println("Calling calculateExpirationDate");
+			Date newExpirationDate = calculateExpirationDate(results);
+			PreparedStatement setNewDateStatement = connection
+					.prepareStatement("update files set expiration_date = ? where path = ?");
+			setNewDateStatement.setDate(1, newExpirationDate);
+			setNewDateStatement.setString(2, filePath);
+		} catch (SQLException e) {
+			System.out.println("Couldn't set new expiration date");
+			e.printStackTrace();
+		}
+	}
+
+	private Date calculateExpirationDate(ResultSet results) {
+		return new Date(0);
 	}
 
 	public void updateFile(String columnName, String oldValue, String newValue) {

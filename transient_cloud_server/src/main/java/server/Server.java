@@ -6,6 +6,7 @@ import static spark.Spark.post;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import spark.Request;
 import database.Database;
@@ -17,11 +18,6 @@ public class Server {
 		Server server = new Server();
 		Database db = server.getDb();
 		server.initializeRoutes();
-		db.insertNewEvent("open", "testFile", "testPath", new Date(0));
-		db.insertNewFile("testFile", "testFile", "testFile", "hashTest",
-				new Date(0));
-		// need to fix the below query
-		db.deleteFile(new Date(0));
 	}
 
 	public Server() {
@@ -49,9 +45,9 @@ public class Server {
 	public String openHandler(Request request) {
 		// Store event in db events table
 		Database db = getDb();
-		SimpleDateFormat formatter = new SimpleDateFormat(
-				"dd/mm/yyyy hh:mm:ss a");
+		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
 		try {
+
 			Date date = new Date(formatter.parse(request.queryParams("date"))
 					.getTime());
 			db.insertNewEvent("open", request.queryParams("file_name"),
@@ -60,14 +56,14 @@ public class Server {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
+		db.deleteHandler(new Date(Calendar.getInstance().getTimeInMillis()));
 		return Messages.POST_SUCCESSFUL;
 	}
 
 	public String modifyHandler(Request request) {
 		System.out.println("Received modify event for "
 				+ request.queryParams(("name")));
-		SimpleDateFormat formatter = new SimpleDateFormat(
-				"dd/mm/yyyy hh:mm:ss a");
+		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
 		long expirationPeriod = 604800000;
 		try {
 			Date date = new Date(formatter.parse(
@@ -81,6 +77,7 @@ public class Server {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
+		db.deleteHandler(new Date(Calendar.getInstance().getTimeInMillis()));
 		return Messages.POST_SUCCESSFUL;
 	}
 
