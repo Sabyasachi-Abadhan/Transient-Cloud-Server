@@ -117,7 +117,8 @@ public class Database {
 			// Calculate new expiration dates if applicable
 			while (results.next()) {
 				System.out.println("Calling setNewExpirationDate");
-				setNewExpirationDate(results.getString("path"));
+				setNewExpirationDate(results.getString("path"),
+						results.getDate("expiration_date"));
 			}
 			// Delete the files which will expire anyway
 			deleteFiles(date);
@@ -127,7 +128,7 @@ public class Database {
 		}
 	}
 
-	private void setNewExpirationDate(String filePath) {
+	private void setNewExpirationDate(String filePath, Date expirationDate) {
 		// This kind of filtering doesn't work if the file has been
 		// moved/renamed.
 		// File hash is also not a good solution because file contents will
@@ -136,12 +137,13 @@ public class Database {
 		Connection connection = getConnection();
 		try {
 			PreparedStatement openEvents = connection
-					.prepareStatement("select * from events where name = 'open' and file_path like ?");
-			openEvents.setString(1, "%" + searchTerm);
+					.prepareStatement("select * from events where name = 'open' and file_name like ?");
+			openEvents.setString(1, "%" + searchTerm + "%");
 			System.out.println(openEvents);
 			ResultSet results = openEvents.executeQuery();
 			System.out.println("Calling calculateExpirationDate");
-			Date newExpirationDate = calculateExpirationDate(results);
+			Date newExpirationDate = calculateExpirationDate(results,
+					expirationDate);
 			PreparedStatement setNewDateStatement = connection
 					.prepareStatement("update files set expiration_date = ? where path = ?");
 			setNewDateStatement.setDate(1, newExpirationDate);
@@ -152,8 +154,31 @@ public class Database {
 		}
 	}
 
-	private Date calculateExpirationDate(ResultSet results) {
-		return new Date(0);
+	private Date calculateExpirationDate(ResultSet results, Date expirationDate) {
+		/*
+		 * Algorithm Get Maximum number of millseconds elapsed (first entry) ->
+		 * d For all the other entries of timestamp x, get (d - x)
+		 */
+		try {
+			double totalMilliSeconds = 0.0;
+			long maxMilliSeconds = 0;
+			while (results.next()) {
+				long currentMilliSeconds = results.getDate("date").getTime();
+				if (currentMilliSeconds > maxMilliSeconds)
+					maxMilliSeconds = currentMilliSeconds;
+				totalMilliSeconds += currentMilliSeconds;
+			}
+			Date newExpirationDate = new Date(
+					(long) (expirationDate.getTime() * Math
+							.ceil(totalMilliSeconds * 1.0 / maxMilliSeconds)));
+			System.out.println("New expiration date: "
+					+ newExpirationDate.toString());
+			return newExpirationDate;
+		} catch (SQLException e) {
+			System.out.println("Failed calculation");
+			e.printStackTrace();
+			return expirationDate;
+		}
 	}
 
 	public void updateFile(String columnName, String oldValue, String newValue) {
