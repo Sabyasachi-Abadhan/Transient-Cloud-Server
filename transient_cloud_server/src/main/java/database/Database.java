@@ -168,12 +168,14 @@ public class Database {
 					maxMilliSeconds = currentMilliSeconds;
 				totalMilliSeconds += currentMilliSeconds;
 			}
+			// multiply with base period and add to previous expiration_date
 			Date newExpirationDate = new Date(
 					(long) (expirationDate.getTime() * Math
 							.ceil(totalMilliSeconds * 1.0 / maxMilliSeconds)));
 			System.out.println("New expiration date: "
 					+ newExpirationDate.toString());
 			return newExpirationDate;
+			// delete the open events
 		} catch (SQLException e) {
 			System.out.println("Failed calculation");
 			e.printStackTrace();

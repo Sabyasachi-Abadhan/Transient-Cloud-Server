@@ -4,17 +4,19 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 
 import java.sql.Date;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import spark.Request;
 import database.Database;
+import dropbox.DropboxManager;
 
 public class Server {
 	private Database db;
 
-	public static void main(String args[]) throws SQLException {
+	public static void main(String args[]) throws Exception {
+		// Initialize Dropbox
+		DropboxManager.authorize();
 		Server server = new Server();
 		Database db = server.getDb();
 		server.initializeRoutes();
@@ -64,6 +66,7 @@ public class Server {
 		System.out.println("Received modify event for "
 				+ request.queryParams(("name")));
 		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
+		// check if there is enough space and delete files otherwise
 		long expirationPeriod = 604800000;
 		try {
 			Date date = new Date(formatter.parse(
