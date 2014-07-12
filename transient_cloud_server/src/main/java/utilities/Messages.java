@@ -1,4 +1,4 @@
-package server;
+package utilities;
 
 /**
  * Contains all messages displayed by Server

@@ -8,9 +8,21 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import spark.Request;
+import utilities.Messages;
+import utilities.Settings;
+
+import com.dropbox.core.DbxException;
+
 import database.Database;
 import dropbox.DropboxManager;
 
+/**
+ * Contains main method. Initializes the database connections, sets up db schema
+ * and Dropbox Connections
+ * 
+ * @author ROHIT
+ *
+ */
 public class Server {
 	private Database db;
 
@@ -41,9 +53,14 @@ public class Server {
 		post("/open/", (request, response) -> this.openHandler(request));
 		post("/move/", (request, response) -> this.moveHandler(request));
 		post("/rename/", (request, response) -> this.renameHandler(request));
-		post("/delete/", (request, response) -> this.deleteHandler(request));
 	}
 
+	/**
+	 * Handles open events sent by the Transient Cloud Client
+	 * 
+	 * @param request
+	 * @return
+	 */
 	public String openHandler(Request request) {
 		// Store event in db events table
 		Database db = getDb();
@@ -62,25 +79,42 @@ public class Server {
 		return Messages.POST_SUCCESSFUL;
 	}
 
+	/**
+	 * Handles modify events sent by the Transient Cloud Client
+	 * 
+	 * @param request
+	 * @return
+	 */
 	public String modifyHandler(Request request) {
 		System.out.println("Received modify event for "
 				+ request.queryParams(("name")));
 		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
+		db.deleteHandler(new Date(Calendar.getInstance().getTimeInMillis()));
+		String size = request.queryParams("file_size");
+		System.out.println("Size in String: " + size);
+		long numericSize = Long.valueOf(size).longValue();
+		System.out.println("Size" + numericSize);
 		// check if there is enough space and delete files otherwise
-		long expirationPeriod = 604800000;
+		while (!enoughSpaceAvailable(numericSize))
+			db.deleteLeastRecentlyUsedFile();
+
+		long expirationPeriod = Settings.baseRetentionTime;
 		try {
 			Date date = new Date(formatter.parse(
+					request.queryParams("expiration_date")).getTime());
+			Date expirationDate = new Date(formatter.parse(
 					request.queryParams("expiration_date")).getTime()
 					+ expirationPeriod);
+			db.insertNewEvent("modify", request.queryParams("name"),
+					request.queryParams("path"), date);
 			db.insertNewFile(request.queryParams("name"),
 					request.queryParams("path"),
 					request.queryParams("identifier"),
-					request.queryParams("hash"), date);
+					request.queryParams("file_size"), expirationDate);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
-		db.deleteHandler(new Date(Calendar.getInstance().getTimeInMillis()));
 		return Messages.POST_SUCCESSFUL;
 	}
 
@@ -100,12 +134,19 @@ public class Server {
 		return Messages.PUT_SUCCESSFUL;
 	}
 
-	public String deleteHandler(Request request) {
-		System.out.println("Inside Delete Handler");
-		return Messages.DELETE_SUCCESSFUL;
-	}
-
 	public String getHandler(Request request) {
 		return Messages.GET_SUCCESSFUL;
+	}
+
+	public boolean enoughSpaceAvailable(long size) {
+		try {
+			long freeSpace = DropboxManager.getFreeDropboxSpace();
+			System.out.println(freeSpace);
+			System.out.println("Free Space in Dropbox: " + freeSpace);
+			return (freeSpace - size >= Settings.FREE_SPACE_THRESHOLD);
+		} catch (DbxException e) {
+			System.out.println("In catch, damn");
+			return false;
+		}
 	}
 }
