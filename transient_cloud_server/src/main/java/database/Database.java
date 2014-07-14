@@ -66,7 +66,7 @@ public class Database {
 					.execute();
 			connection
 					.prepareStatement(
-							"create table if not exists files (name varchar(255), path varchar(255), identifier varchar(255), size varchar(255), expiration_date DATE)")
+							"create table if not exists files (id identity, name varchar(255), path varchar(255), identifier varchar(255), size varchar(255), expiration_date DATE)")
 					.execute();
 		} catch (SQLException e) {
 			System.out.println("Failure to execute query, sorry");
@@ -113,19 +113,53 @@ public class Database {
 	public void insertNewFile(String name, String path, String identifier,
 			String size, Date date) throws SQLException {
 		Connection connection = getConnection();
-		PreparedStatement insertStatement = connection
-				.prepareStatement("insert into files (name, path, identifier, size, expiration_date) values (?,?,?,?,?)");
-		insertStatement.setString(1, name);
-		insertStatement.setString(2, path);
-		insertStatement.setString(3, identifier);
-		insertStatement.setString(4, size);
-		try {
-			insertStatement.setDate(5, date);
-			insertStatement.execute();
-		} catch (SQLException e) {
-			System.out.println("Could not insert new file");
-			e.printStackTrace();
+		if (!fileExists(path)) {
+			PreparedStatement insertStatement = connection
+					.prepareStatement("insert into files (id, name, path, identifier, size, expiration_date) values (null, ?,?,?,?,?)");
+			insertStatement.setString(1, name);
+			insertStatement.setString(2, path);
+			insertStatement.setString(3, identifier);
+			insertStatement.setString(4, size);
+			try {
+				insertStatement.setDate(5, date);
+				insertStatement.execute();
+			} catch (SQLException e) {
+				System.out.println("Could not insert new file");
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println("File already existed so just updating");
+			PreparedStatement insertStatement = connection
+					.prepareStatement("update files set name = (?), identifier = (?), size = (?), expiration_date = (?) where path = (?)");
+			insertStatement.setString(1, name);
+			insertStatement.setString(2, identifier);
+			insertStatement.setString(3, size);
+			try {
+				insertStatement.setDate(4, date);
+				insertStatement.setString(5, path);
+				insertStatement.execute();
+			} catch (SQLException e) {
+				System.out.println("Could not insert new file");
+				e.printStackTrace();
+			}
 		}
+	}
+
+	private boolean fileExists(String path) {
+		Connection connection = getConnection();
+		int rowCount = 0;
+		try {
+			PreparedStatement search = connection
+					.prepareStatement("select * from files where path = (?)");
+			search.setString(1, path);
+			ResultSet results = search.executeQuery();
+			while (results.next())
+				++rowCount;
+			return (rowCount > 0);
+		} catch (SQLException e) {
+			return false;
+		}
+
 	}
 
 	/**

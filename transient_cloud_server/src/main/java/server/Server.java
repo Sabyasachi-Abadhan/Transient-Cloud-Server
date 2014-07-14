@@ -91,9 +91,7 @@ public class Server {
 		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
 		db.deleteHandler(new Date(Calendar.getInstance().getTimeInMillis()));
 		String size = request.queryParams("file_size");
-		System.out.println("Size in String: " + size);
 		long numericSize = Long.valueOf(size).longValue();
-		System.out.println("Size" + numericSize);
 		// check if there is enough space and delete files otherwise
 		while (!enoughSpaceAvailable(numericSize))
 			db.deleteLeastRecentlyUsedFile();
@@ -118,6 +116,12 @@ public class Server {
 		return Messages.POST_SUCCESSFUL;
 	}
 
+	/**
+	 * Handles Move Requests from Transient Cloud Client
+	 * 
+	 * @param request
+	 * @return
+	 */
 	public String moveHandler(Request request) {
 		System.out.println("Inside move handler");
 		db.updateFile("path", request.queryParams("old_path"),
@@ -125,6 +129,12 @@ public class Server {
 		return Messages.PUT_SUCCESSFUL;
 	}
 
+	/**
+	 * Handles Rename Requests from Transient Cloud Client
+	 * 
+	 * @param request
+	 * @return
+	 */
 	public String renameHandler(Request request) {
 		System.out.println("Inside rename handler");
 		db.updateFile("path", request.queryParams("old_path"),
@@ -138,14 +148,19 @@ public class Server {
 		return Messages.GET_SUCCESSFUL;
 	}
 
+	/**
+	 * Checks if the user's dropbox folder has enough room for a file of given
+	 * size
+	 * 
+	 * @param size
+	 * @return
+	 */
 	public boolean enoughSpaceAvailable(long size) {
 		try {
 			long freeSpace = DropboxManager.getFreeDropboxSpace();
-			System.out.println(freeSpace);
 			System.out.println("Free Space in Dropbox: " + freeSpace);
 			return (freeSpace - size >= Settings.FREE_SPACE_THRESHOLD);
 		} catch (DbxException e) {
-			System.out.println("In catch, damn");
 			return false;
 		}
 	}
