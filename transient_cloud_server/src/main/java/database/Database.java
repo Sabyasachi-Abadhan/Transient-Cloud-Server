@@ -145,7 +145,7 @@ public class Database {
 		}
 	}
 
-	private boolean fileExists(String path) {
+	public boolean fileExists(String path) {
 		Connection connection = getConnection();
 		int rowCount = 0;
 		try {

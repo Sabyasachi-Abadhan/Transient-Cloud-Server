@@ -62,14 +62,15 @@ public class Server {
 	 * @return
 	 */
 	public String openHandler(Request request) {
-		// Store event in db events table
+		// Store event in db events table if the file already exists
+		if (!db.fileExists(request.queryParams("file_path")))
+			return Messages.POST_SUCCESSFUL;
 		Database db = getDb();
 		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
 		try {
 
 			Date date = new Date(formatter.parse(request.queryParams("date"))
 					.getTime());
-
 			db.insertNewEvent("open", request.queryParams("file_name"),
 					request.queryParams("file_path"), date);
 		} catch (Exception e) {
