@@ -69,6 +69,7 @@ public class Server {
 
 			Date date = new Date(formatter.parse(request.queryParams("date"))
 					.getTime());
+
 			db.insertNewEvent("open", request.queryParams("file_name"),
 					request.queryParams("file_path"), date);
 		} catch (Exception e) {
@@ -93,8 +94,10 @@ public class Server {
 		String size = request.queryParams("file_size");
 		long numericSize = Long.valueOf(size).longValue();
 		// check if there is enough space and delete files otherwise
-		while (!enoughSpaceAvailable(numericSize))
+		while (!enoughSpaceAvailable(numericSize)) {
+			System.out.println("There isn't enough space available");
 			db.deleteLeastRecentlyUsedFile();
+		}
 
 		long expirationPeriod = Settings.baseRetentionTime;
 		try {

@@ -247,9 +247,12 @@ public class Database {
 
 	private void deleteFiles(Date date) {
 		try {
-			deleteFilesFromDropbox(date);
+			int numberOfFilesDeleted = deleteFilesFromDropbox(date);
 			deleteFilesFromDatabase(date);
-			deleteOpenEventsFromDatabase(date);
+			if (numberOfFilesDeleted > 0)
+				deleteOpenEventsFromDatabase(date);
+			else
+				System.out.println("Didn't delete from the events table");
 		} catch (SQLException | DbxException e) {
 			System.out.println("Couldn't delete the file, sorry");
 			e.printStackTrace();
@@ -273,7 +276,7 @@ public class Database {
 		deleteStatement.execute();
 	}
 
-	private void deleteFilesFromDropbox(Date date) throws SQLException,
+	private int deleteFilesFromDropbox(Date date) throws SQLException,
 			DbxException {
 		Connection connection = getConnection();
 		PreparedStatement getFilesToDeleteStatement;
@@ -281,10 +284,11 @@ public class Database {
 				.prepareStatement("Select * from files where expiration_date <= (?)");
 		getFilesToDeleteStatement.setDate(1, date);
 		ResultSet results = getFilesToDeleteStatement.executeQuery();
-		deleteFilesFromDropbox(results);
+		return deleteFilesFromDropbox(results);
 	}
 
-	private void deleteFilesFromDropbox(ResultSet results) throws SQLException {
+	private int deleteFilesFromDropbox(ResultSet results) throws SQLException {
+		int numberOfFilesDeleted = 0;
 		while (results.next()) {
 			String fullFilePath = results.getString("path");
 			String transientFolderName = results.getString("identifier");
@@ -294,10 +298,12 @@ public class Database {
 			System.out.println("Deleting file: " + pathToDelete);
 			try {
 				DropboxManager.deleteFile(pathToDelete);
+				++numberOfFilesDeleted;
 			} catch (DbxException ex) {
 				ex.printStackTrace();
 			}
 		}
+		return numberOfFilesDeleted;
 	}
 
 	private void setNewExpirationDate(String filePath, Date expirationDate) {
