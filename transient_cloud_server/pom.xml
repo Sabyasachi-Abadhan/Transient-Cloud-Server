@@ -1,35 +1,55 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>ch.ethz.globis</groupId>
-  <artifactId>transient_cloud_server</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
-
-  <name>transient_cloud_server</name>
-  <url>http://maven.apache.org</url>
-
-  <properties>
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+<groupId>ch.ethz.globis</groupId>
+<artifactId>transient_cloud_server</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<packaging>jar</packaging>
+<name>transient_cloud_server</name>
+<url>http://maven.apache.org</url>
+<properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-  <dependencies>
-   <dependency>
-      <groupId>com.sparkjava</groupId>
-      <artifactId>spark-core</artifactId>
-      <version>2.0.0</version>
-	</dependency>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+<dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
+        <groupId>com.sparkjava</groupId>
+        <artifactId>spark-core</artifactId>
+        <version>2.0.0</version>
     </dependency>
     <dependency>
-    <groupId>log4j</groupId>
-    <artifactId>log4j</artifactId>
-    <version>1.2.17</version>
-</dependency>
-  </dependencies>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>3.8.1</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+    </dependency>
+    <dependency>
+        <groupId>com.dropbox.core</groupId>
+        <artifactId>dropbox-core-sdk</artifactId>
+        <version>[1.7,1.8)</version>
+    </dependency>
+    <dependency>
+        <groupId>hsqldb</groupId>
+        <artifactId>hsqldb</artifactId>
+        <version>1.8.0.10</version>
+    </dependency>
+</dependencies>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.2.1</version>
+            <configuration>
+                <mainClass>server.Server.Main</mainClass>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
 </project>
