@@ -15,8 +15,6 @@ Setup
 Todo
 ----
 
-1. Put Handler
-2. Delete Handler
-3. Calculation of Activity
-4. Deletion Thread
-5. Dropbox Integration
+1. Private key/Public Key relationship of both events, files
+2. Fix Maven Project and remove libraries folder
+3. Remove System.out.println() occurences

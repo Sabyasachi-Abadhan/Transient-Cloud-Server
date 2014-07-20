@@ -62,9 +62,6 @@ public class Server {
 	 * @return
 	 */
 	public String openHandler(Request request) {
-		// Store event in db events table if the file already exists
-		if (!db.fileExists(request.queryParams("file_path")))
-			return Messages.POST_SUCCESSFUL;
 		Database db = getDb();
 		SimpleDateFormat formatter = new SimpleDateFormat("d/M/y h:m:s a");
 		try {
