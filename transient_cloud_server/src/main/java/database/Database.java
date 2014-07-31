@@ -62,7 +62,7 @@ public class Database {
 		try {
 			connection
 					.prepareStatement(
-							"create table if not exists events (name varchar(255), file_name varchar(255), file_path varchar(255), date DATE)")
+							"create table if not exists events (id integer, name varchar(255), file_name varchar(255), file_path varchar(255), date DATE)")
 					.execute();
 			connection
 					.prepareStatement(
@@ -85,17 +85,19 @@ public class Database {
 	 */
 	public void insertNewEvent(String name, String filePath, String fileName,
 			Date date) throws SQLException {
-		System.out.println("fileName: " + fileName);
-		if (!fileExists(fileName) && name.equals("open"))
+		int fileId = fileExists(fileName);
+		// If the file doesn't exist in the files table, don't add an event
+		if (name.equals("open") && fileId < 0)
 			return;
 		Connection connection = getConnection();
 		PreparedStatement insertStatement = connection
-				.prepareStatement("insert into events (name, file_name, file_path, date) values (?,?,?,?)");
-		insertStatement.setString(1, name);
-		insertStatement.setString(2, fileName);
-		insertStatement.setString(3, filePath);
+				.prepareStatement("insert into events (id, name, file_name, file_path, date) values (?,?,?,?,?)");
+		insertStatement.setInt(1, fileId);
+		insertStatement.setString(2, name);
+		insertStatement.setString(3, fileName);
+		insertStatement.setString(4, filePath);
 		try {
-			insertStatement.setDate(4, date);
+			insertStatement.setDate(5, date);
 			insertStatement.execute();
 		} catch (SQLException e) {
 			System.out.println("Could not insert new event");
@@ -116,7 +118,8 @@ public class Database {
 	public void insertNewFile(String name, String path, String identifier,
 			String size, Date date) throws SQLException {
 		Connection connection = getConnection();
-		if (!fileExists(path)) {
+		// File doesn't already exist in the files table so we add it
+		if (fileExists(path) < 0) {
 			PreparedStatement insertStatement = connection
 					.prepareStatement("insert into files (id, name, path, identifier, size, expiration_date) values (null, ?,?,?,?,?)");
 			insertStatement.setString(1, name);
@@ -148,19 +151,19 @@ public class Database {
 		}
 	}
 
-	public boolean fileExists(String path) {
+	public int fileExists(String path) {
 		Connection connection = getConnection();
-		int rowCount = 0;
 		try {
 			PreparedStatement search = connection
 					.prepareStatement("select * from files where path = (?)");
 			search.setString(1, path);
 			ResultSet results = search.executeQuery();
+			int id = -1;
 			while (results.next())
-				++rowCount;
-			return (rowCount > 0);
+				id = results.getInt("id");
+			return id;
 		} catch (SQLException e) {
-			return false;
+			return -1;
 		}
 
 	}

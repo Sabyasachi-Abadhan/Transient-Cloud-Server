@@ -104,12 +104,12 @@ public class Server {
 			Date expirationDate = new Date(formatter.parse(
 					request.queryParams("expiration_date")).getTime()
 					+ expirationPeriod);
-			db.insertNewEvent("modify", request.queryParams("name"),
-					request.queryParams("path"), date);
 			db.insertNewFile(request.queryParams("name"),
 					request.queryParams("path"),
 					request.queryParams("identifier"),
 					request.queryParams("file_size"), expirationDate);
+			db.insertNewEvent("modify", request.queryParams("name"),
+					request.queryParams("path"), date);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
