@@ -313,16 +313,12 @@ public class Database {
 	}
 
 	private void setNewExpirationDate(String filePath, Date expirationDate) {
-		// This kind of filtering doesn't work if the file has been
-		// moved/renamed.
-		// File hash is also not a good solution because file contents will
-		// change
-		String searchTerm = filePath.substring(filePath.lastIndexOf("Dropbox"));
+		int searchId = fileExists(filePath);
 		Connection connection = getConnection();
 		try {
 			PreparedStatement openEvents = connection
-					.prepareStatement("select * from events where name = 'open' and file_name like ?");
-			openEvents.setString(1, "%" + searchTerm + "%");
+					.prepareStatement("select * from events where name = 'open' and id = ?");
+			openEvents.setInt(1, searchId);
 			System.out.println(openEvents);
 			ResultSet results = openEvents.executeQuery();
 			System.out.println("Calling calculateExpirationDate");
