@@ -85,6 +85,9 @@ public class Database {
 	 */
 	public void insertNewEvent(String name, String filePath, String fileName,
 			Date date) throws SQLException {
+		System.out.println("fileName: " + fileName);
+		if (!fileExists(fileName) && name.equals("open"))
+			return;
 		Connection connection = getConnection();
 		PreparedStatement insertStatement = connection
 				.prepareStatement("insert into events (name, file_name, file_path, date) values (?,?,?,?)");
